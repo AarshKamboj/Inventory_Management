@@ -1,65 +1,43 @@
 import { Link } from "react-router-dom";
+import { FaChartBar, FaBoxOpen, FaCashRegister } from "react-icons/fa";
 
-const DashboardLayout = ({children})=>{
+const DashboardLayout = ({ children }) => {
+  return (
+    <div className="layout">
 
-  return(
+      {/* SIDEBAR */}
+      <div className="sidebar">
+        <h2 className="logo">BizSaathi</h2>
 
-    <div style={{display:"flex",height:"100vh"}}>
+        <Link to="/" className="nav-item">
+          <FaChartBar /> Dashboard
+        </Link>
 
-      {/* Sidebar */}
+        <Link to="/inventory" className="nav-item">
+          <FaBoxOpen /> Inventory
+        </Link>
 
-      <div className="sidebar" style={{padding:"25px"}}>
-
-        <h2 style={{color:"#2563EB"}}>BizSaathi</h2>
-
-        <nav style={{marginTop:"30px",display:"flex",flexDirection:"column",gap:"18px"}}>
-
-          <Link to="/dashboard">Dashboard</Link>
-
-          <Link to="/inventory">Inventory</Link>
-
-          <Link to="/billing">Billing</Link>
-
-        </nav>
-
+        <Link to="/billing" className="nav-item">
+          <FaCashRegister /> Billing
+        </Link>
       </div>
 
+      {/* MAIN */}
+      <div className="main">
 
-      {/* Main Content */}
-
-      <div style={{flex:1,padding:"30px"}}>
-
-        {/* Top Bar */}
-
-        <div style={{
-          display:"flex",
-          justifyContent:"space-between",
-          marginBottom:"25px"
-        }}>
-
-          <input
-            placeholder="Search SKU / Product / Invoice"
-            style={{width:"300px"}}
-          />
-
-          <div>
-
-            <span style={{marginRight:"15px"}}>🔔</span>
-
-            <span>Admin</span>
-
-          </div>
-
+        <div className="topbar">
+          <input className="search" placeholder="Search..." />
+          <div>🔔 Admin</div>
         </div>
 
-        {children}
+        <div className="content">
+          {children}
+        </div>
 
       </div>
 
     </div>
-
   );
-
 };
 
 export default DashboardLayout;

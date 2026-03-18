@@ -1,108 +1,67 @@
-import { useContext } from "react";
-import { StoreContext } from "../context/StoreContext";
 import DashboardLayout from "../components/layout/DashboardLayout";
+import {
+  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid
+} from "recharts";
+
+const data = [
+  { day: "Mon", sales: 200 },
+  { day: "Tue", sales: 400 },
+  { day: "Wed", sales: 300 },
+  { day: "Thu", sales: 600 },
+  { day: "Fri", sales: 800 },
+];
 
 const Dashboard = () => {
-
-  const { products } = useContext(StoreContext);
-
-  const totalProducts = products.length;
-
-  const totalStock = products.reduce(
-    (a,p)=>a+p.stock,
-    0
-  );
-
-  const inventoryValue = products.reduce(
-    (a,p)=>a+p.stock*p.price,
-    0
-  );
-
-  return(
-
+  return (
     <DashboardLayout>
 
-      <h1 style={{marginBottom:"30px"}}>
-        BizSaathi Dashboard
-      </h1>
+      <h1>Dashboard</h1>
 
-      {/* Dashboard Cards */}
-
-      <div style={grid}>
-
-        <div className="card">
-
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/3144/3144456.png"
-            width="50"
-          />
-
-          <h2>{totalProducts}</h2>
-
-          <p>Total Products</p>
-
-        </div>
-
-        <div className="card">
-
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/3081/3081986.png"
-            width="50"
-          />
-
-          <h2>{totalStock}</h2>
-
-          <p>Total Stock</p>
-
-        </div>
-
-        <div className="card">
-
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/2331/2331941.png"
-            width="50"
-          />
-
-          <h2>₹ {inventoryValue}</h2>
-
-          <p>Inventory Value</p>
-
-        </div>
-
+      {/* CARDS */}
+      <div style={cards}>
+        <div style={{...card,background:"#3b82f6"}}>₹ 12,000<br/>Revenue</div>
+        <div style={{...card,background:"#10b981"}}>120<br/>Sales</div>
+        <div style={{...card,background:"#f59e0b"}}>10<br/>Low Stock</div>
+        <div style={{...card,background:"#ef4444"}}>2<br/>Out of Stock</div>
       </div>
 
-      {/* Banner */}
+      {/* CHART */}
+      <div style={panel}>
+        <h3>Sales Overview</h3>
 
-      <div className="card" style={{marginTop:"35px",display:"flex",alignItems:"center",gap:"20px"}}>
-
-        <img
-          src="https://cdn-icons-png.flaticon.com/512/4290/4290854.png"
-          width="90"
-        />
-
-        <div>
-
-          <h2>Welcome to BizSaathi</h2>
-
-          <p>
-            Your smart retail partner for managing inventory,
-            GST billing, and shop operations.
-          </p>
-
-        </div>
+        <LineChart width={500} height={250} data={data}>
+          <CartesianGrid stroke="#ccc"/>
+          <XAxis dataKey="day"/>
+          <YAxis/>
+          <Tooltip/>
+          <Line type="monotone" dataKey="sales" stroke="#3b82f6"/>
+        </LineChart>
 
       </div>
 
     </DashboardLayout>
-
   );
-
 };
 
-const grid={
-  display:"grid",
-  gridTemplateColumns:"repeat(3,1fr)",
-  gap:"25px"
+const cards = {
+  display: "grid",
+  gridTemplateColumns: "repeat(4,1fr)",
+  gap: "20px",
+  marginTop: "20px",
+};
+
+const card = {
+  padding: "20px",
+  borderRadius: "10px",
+  color: "white",
+  fontWeight: "600",
+};
+
+const panel = {
+  background: "white",
+  padding: "20px",
+  marginTop: "20px",
+  borderRadius: "12px",
 };
 
 export default Dashboard;

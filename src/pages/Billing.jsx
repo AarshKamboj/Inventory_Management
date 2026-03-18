@@ -97,20 +97,10 @@ gap:"15px"
 }}>
 
 {filteredProducts.map(p=>(
-<div
-key={p.id}
-className="product-card"
-onClick={()=>addToBill(p)}
->
-
-<h3>{p.name}</h3>
-
-<p>₹ {p.price}</p>
-
-<p className="status-green">
-Stock: {p.stock}
-</p>
-
+<div className="card" onClick={()=>addToBill(p)}>
+  <h3>{p.name}</h3>
+  <p>₹ {p.price}</p>
+  <p style={{color:"#10b981"}}>Stock: {p.stock}</p>
 </div>
 ))}
 
@@ -174,11 +164,8 @@ onClick={()=>removeItem(item)}
 
 </div>
 
-<button
-onClick={printBill}
-style={{width:"100%",marginTop:"15px"}}
->
-Process Payment & Print
+<button className="btn">
+  Process Payment & Print
 </button>
 
 </div>
