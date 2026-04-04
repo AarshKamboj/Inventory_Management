@@ -1,67 +1,62 @@
 import DashboardLayout from "../components/layout/DashboardLayout";
-import {
-  LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid
-} from "recharts";
-
-const data = [
-  { day: "Mon", sales: 200 },
-  { day: "Tue", sales: 400 },
-  { day: "Wed", sales: 300 },
-  { day: "Thu", sales: 600 },
-  { day: "Fri", sales: 800 },
-];
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 const Dashboard = () => {
+  const [data, setData] = useState({
+    revenue: 0,
+    sales: 0,
+    lowStock: 0,
+    outOfStock: 0,
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/dashboard");
+      setData(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <DashboardLayout>
+      <div className="p-6 space-y-6">
 
-      <h1>Dashboard</h1>
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
 
-      {/* CARDS */}
-      <div style={cards}>
-        <div style={{...card,background:"#3b82f6"}}>₹ 12,000<br/>Revenue</div>
-        <div style={{...card,background:"#10b981"}}>120<br/>Sales</div>
-        <div style={{...card,background:"#f59e0b"}}>10<br/>Low Stock</div>
-        <div style={{...card,background:"#ef4444"}}>2<br/>Out of Stock</div>
+        {/* CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+          <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white p-5 rounded-xl">
+            <p>Revenue</p>
+            <h2 className="text-2xl font-bold">₹{data.revenue}</h2>
+          </div>
+
+          <div className="bg-gradient-to-r from-green-500 to-green-700 text-white p-5 rounded-xl">
+            <p>Sales</p>
+            <h2 className="text-2xl font-bold">{data.sales}</h2>
+          </div>
+
+          <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-5 rounded-xl">
+            <p>Low Stock</p>
+            <h2 className="text-2xl font-bold">{data.lowStock}</h2>
+          </div>
+
+          <div className="bg-gradient-to-r from-red-500 to-red-700 text-white p-5 rounded-xl">
+            <p>Out of Stock</p>
+            <h2 className="text-2xl font-bold">{data.outOfStock}</h2>
+          </div>
+
+        </div>
+
       </div>
-
-      {/* CHART */}
-      <div style={panel}>
-        <h3>Sales Overview</h3>
-
-        <LineChart width={500} height={250} data={data}>
-          <CartesianGrid stroke="#ccc"/>
-          <XAxis dataKey="day"/>
-          <YAxis/>
-          <Tooltip/>
-          <Line type="monotone" dataKey="sales" stroke="#3b82f6"/>
-        </LineChart>
-
-      </div>
-
     </DashboardLayout>
   );
-};
-
-const cards = {
-  display: "grid",
-  gridTemplateColumns: "repeat(4,1fr)",
-  gap: "20px",
-  marginTop: "20px",
-};
-
-const card = {
-  padding: "20px",
-  borderRadius: "10px",
-  color: "white",
-  fontWeight: "600",
-};
-
-const panel = {
-  background: "white",
-  padding: "20px",
-  marginTop: "20px",
-  borderRadius: "12px",
 };
 
 export default Dashboard;

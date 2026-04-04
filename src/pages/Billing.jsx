@@ -1,181 +1,241 @@
+import DashboardLayout from "../components/layout/DashboardLayout";
 import { useContext, useState } from "react";
 import { StoreContext } from "../context/StoreContext";
-import DashboardLayout from "../components/layout/DashboardLayout";
-import { FaTrash } from "react-icons/fa";
+import axios from "axios";
+import { generatePDF } from "../utils/generatePDF"; // ✅ ONLY THIS
 
 const Billing = () => {
-
   const { products, updateStock } = useContext(StoreContext);
 
-  const [customer,setCustomer] = useState("");
-  const [phone,setPhone] = useState("");
-  const [search,setSearch] = useState("");
-  const [cart,setCart] = useState([]);
+  const [cart, setCart] = useState([]);
 
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // ➕ ADD TO CART
+  const addToCart = (product) => {
+    const exists = cart.find((item) => item._id === product._id);
 
-  const addToBill = (product)=>{
-
-    const existing = cart.find(c=>c.id===product.id);
-
-    if(existing){
-
+    if (exists) {
       setCart(
-        cart.map(c=>
-          c.id===product.id
-          ? {...c,qty:c.qty+1}
-          : c
+        cart.map((item) =>
+          item._id === product._id
+            ? { ...item, qty: item.qty + 1 }
+            : item
         )
       );
-
-    }else{
-
-      setCart([
-        ...cart,
-        {
-          id:product.id,
-          name:product.name,
-          price:product.price,
-          gst:product.gst,
-          qty:1
-        }
-      ]);
-
+    } else {
+      setCart([...cart, { ...product, qty: 1 }]);
     }
-
-    updateStock(product.id,1);
   };
 
-  const removeItem=(item)=>{
+  // 🔢 UPDATE QTY
+  const updateQty = (id, qty) => {
+    if (qty < 1) return;
 
-    setCart(cart.filter(c=>c.id!==item.id));
-
-    updateStock(item.id,-item.qty);
+    setCart(
+      cart.map((item) =>
+        item._id === id ? { ...item, qty } : item
+      )
+    );
   };
 
-  const subtotal = cart.reduce((a,c)=>a+(c.price*c.qty),0);
+  // ❌ REMOVE ITEM
+  const removeItem = (id) => {
+    setCart(cart.filter((item) => item._id !== id));
+  };
 
-  const gst = cart.reduce(
-    (a,c)=>a+(c.price*c.qty*c.gst/100),
+  // 💰 CALCULATIONS
+  const subtotal = cart.reduce(
+    (acc, item) => acc + item.price * item.qty,
     0
   );
 
-  const cgst = gst/2;
-  const sgst = gst/2;
+  const gst = subtotal * 0.18;
+  const cgst = gst / 2;
+  const sgst = gst / 2;
+  const total = subtotal + gst;
 
-  const grandTotal = subtotal + gst;
+  // 🧾 CHECKOUT
+  const handleCheckout = async () => {
+    try {
+      // 🧾 FORMAT ITEMS
+      const formattedItems = cart.map((item) => ({
+        name: item.name,
+        qty: item.qty,
+        price: item.price,
+        total: item.qty * item.price,
+      }));
 
-  const printBill=()=>{
-    window.print();
+      // 📦 SEND DATA
+      const invoiceData = {
+        customerName: customer.name || "Walk-in Customer",
+        customerPhone: customer.phone || "-",
+        items: formattedItems,
+        subtotal,
+        cgst,
+        sgst,
+        total,
+      };
+
+      const res = await axios.post(
+        "http://localhost:5000/api/invoice",
+        invoiceData
+      );
+
+      const savedInvoice = res.data;
+
+      // 📉 UPDATE STOCK
+      cart.forEach((item) => {
+        updateStock(item._id, item.qty);
+      });
+
+      // 📄 GENERATE PDF (ONLY CALL HERE)
+      generatePDF(savedInvoice);
+
+      alert("Invoice Generated: " + savedInvoice.invoiceNumber);
+
+      setCart([]);
+
+    } catch (err) {
+      console.error(err);
+      alert("Error generating invoice");
+    }
   };
+  const [customer, setCustomer] = useState({
+    name: "",
+    phone: "",
+  });
 
-  return(
+  return (
+    <DashboardLayout>
+      <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-<DashboardLayout>
+        {/* PRODUCTS */}
+        <div className="bg-white p-5 rounded-2xl shadow">
+          <h2 className="text-lg font-semibold mb-4">Products</h2>
 
-<h1 style={{marginBottom:"25px"}}>POS Billing</h1>
+          <div className="space-y-3 max-h-[400px] overflow-y-auto">
+            {products.map((p) => (
+              <div
+                key={p._id}
+                className="flex justify-between items-center border p-3 rounded-xl"
+              >
+                <div>
+                  <p className="font-medium">{p.name}</p>
+                  <p className="text-sm text-gray-500">
+                    ₹{p.price} | Stock: {p.stock}
+                  </p>
+                </div>
 
-<div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:"20px"}}>
+                <button
+                  onClick={() => addToCart(p)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
+                >
+                  Add
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
 
-{/* LEFT PANEL (PRODUCTS) */}
+        <div className="bg-white p-5 rounded-2xl shadow mb-4">
+          <h2 className="text-lg font-semibold mb-3">Customer Details</h2>
 
-<div>
+          <input
+            type="text"
+            placeholder="Customer Name"
+            value={customer.name}
+            onChange={(e) =>
+              setCustomer({ ...customer, name: e.target.value })
+            }
+            className="w-full p-2 border rounded mb-2"
+          />
 
-<input
-placeholder="Scan barcode or search product..."
-value={search}
-onChange={(e)=>setSearch(e.target.value)}
-style={{marginBottom:"20px"}}
-/>
+          <input
+            type="text"
+            placeholder="Phone Number"
+            value={customer.phone}
+            onChange={(e) =>
+              setCustomer({ ...customer, phone: e.target.value })
+            }
+            className="w-full p-2 border rounded"
+          />
+        </div>
 
-<div style={{
-display:"grid",
-gridTemplateColumns:"repeat(3,1fr)",
-gap:"15px"
-}}>
+        {/* CART */}
+        <div className="bg-white p-5 rounded-2xl shadow">
+          <h2 className="text-lg font-semibold mb-4">Invoice</h2>
 
-{filteredProducts.map(p=>(
-<div className="card" onClick={()=>addToBill(p)}>
-  <h3>{p.name}</h3>
-  <p>₹ {p.price}</p>
-  <p style={{color:"#10b981"}}>Stock: {p.stock}</p>
-</div>
-))}
+          {cart.length === 0 ? (
+            <p className="text-gray-500">No items added</p>
+          ) : (
+            <>
+              <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                {cart.map((item) => (
+                  <div
+                    key={item._id}
+                    className="flex justify-between items-center border p-3 rounded-xl"
+                  >
+                    <div>
+                      <p className="font-medium">{item.name}</p>
+                      <p className="text-sm">₹{item.price}</p>
+                    </div>
 
-</div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={item.qty}
+                        onChange={(e) =>
+                          updateQty(item._id, Number(e.target.value))
+                        }
+                        className="w-16 p-1 border rounded"
+                      />
 
-</div>
+                      <button
+                        onClick={() => removeItem(item._id)}
+                        className="text-red-500"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
+              {/* SUMMARY */}
+              <div className="mt-4 border-t pt-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>₹{subtotal.toFixed(2)}</span>
+                </div>
 
-{/* RIGHT PANEL (CART) */}
+                <div className="flex justify-between">
+                  <span>CGST (9%)</span>
+                  <span>₹{cgst.toFixed(2)}</span>
+                </div>
 
-<div className="bill-panel">
+                <div className="flex justify-between">
+                  <span>SGST (9%)</span>
+                  <span>₹{sgst.toFixed(2)}</span>
+                </div>
 
-<h2>Current Bill</h2>
+                <div className="flex justify-between font-semibold text-lg">
+                  <span>Total</span>
+                  <span>₹{total.toFixed(2)}</span>
+                </div>
+              </div>
 
-<table>
+              <button
+                onClick={handleCheckout}
+                className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white py-2 rounded-xl"
+              >
+                Generate Invoice
+              </button>
+            </>
+          )}
+        </div>
 
-<thead>
-<tr>
-<th>Item</th>
-<th>Qty</th>
-<th>₹</th>
-<th></th>
-</tr>
-</thead>
-
-<tbody>
-
-{cart.map(item=>(
-<tr key={item.id}>
-
-<td>{item.name}</td>
-
-<td>{item.qty}</td>
-
-<td>₹ {item.price*item.qty}</td>
-
-<td>
-<FaTrash
-style={{color:"red",cursor:"pointer"}}
-onClick={()=>removeItem(item)}
-/>
-</td>
-
-</tr>
-))}
-
-</tbody>
-
-</table>
-
-
-<div style={{marginTop:"20px"}}>
-
-<p>Subtotal : ₹ {subtotal.toFixed(2)}</p>
-
-<p>CGST : ₹ {cgst.toFixed(2)}</p>
-
-<p>SGST : ₹ {sgst.toFixed(2)}</p>
-
-<h2>Total : ₹ {grandTotal.toFixed(2)}</h2>
-
-</div>
-
-<button className="btn">
-  Process Payment & Print
-</button>
-
-</div>
-
-</div>
-
-</DashboardLayout>
-
-);
-
-}
+      </div>
+    </DashboardLayout>
+  );
+};
 
 export default Billing;

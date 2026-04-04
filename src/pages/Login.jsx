@@ -1,50 +1,75 @@
-/**
- * UI-only Login Page
- * No backend connection yet
- */
-
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Login = () => {
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Temporary navigation to test routing
-    navigate("/dashboard");
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/login",
+        form
+      );
+
+      // ✅ Save user
+      localStorage.setItem("user", JSON.stringify(res.data));
+
+      // ✅ Redirect
+      navigate("/dashboard");
+    } catch (err) {
+      setError("Invalid credentials");
+    }
   };
 
   return (
-    <div style={styles.container}>
-      <form style={styles.form} onSubmit={handleLogin}>
-        <h2>Smart Inventory Login</h2>
+    <div className="h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded-2xl shadow w-96">
+        <h2 className="text-2xl font-semibold mb-6 text-center">
+          BizSaathi Login
+        </h2>
 
-        <input type="email" placeholder="Email" required />
-        <input type="password" placeholder="Password" required />
+        {error && (
+          <p className="text-red-500 text-sm mb-3">{error}</p>
+        )}
 
-        <button type="submit">Login</button>
-      </form>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Email"
+            className="w-full p-3 border rounded-xl"
+            value={form.email}
+            onChange={(e) =>
+              setForm({ ...form, email: e.target.value })
+            }
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full p-3 border rounded-xl"
+            value={form.password}
+            onChange={(e) =>
+              setForm({ ...form, password: e.target.value })
+            }
+          />
+
+          <button className="w-full bg-blue-600 text-white py-3 rounded-xl">
+            Login
+          </button>
+        </form>
+      </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    height: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  form: {
-    width: "300px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-    padding: "20px",
-    background: "#fff",
-    borderRadius: "10px",
-  },
 };
 
 export default Login;

@@ -1,41 +1,72 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { FaChartBar, FaBoxOpen, FaCashRegister } from "react-icons/fa";
 
 const DashboardLayout = ({ children }) => {
+  const location = useLocation();
+
+  const menu = [
+    {
+      name: "Dashboard",
+      path: "/dashboard", // ✅ FIXED
+      icon: <FaChartBar />,
+    },
+    {
+      name: "Inventory",
+      path: "/inventory",
+      icon: <FaBoxOpen />,
+    },
+    {
+      name: "Billing",
+      path: "/billing",
+      icon: <FaCashRegister />,
+    },
+    {
+      name: "Invoices",
+      path: "/invoices",
+      icon: "📄",
+    },
+  ];
+
   return (
-    <div className="layout">
+    <div className="flex">
 
       {/* SIDEBAR */}
-      <div className="sidebar">
-        <h2 className="logo">BizSaathi</h2>
+      <div className="w-64 bg-blue-600 text-white min-h-screen p-4 space-y-4">
+        <h2 className="text-xl font-bold mb-6">BizSaathi 🚀</h2>
 
-        <Link to="/" className="nav-item">
-          <FaChartBar /> Dashboard
-        </Link>
-
-        <Link to="/inventory" className="nav-item">
-          <FaBoxOpen /> Inventory
-        </Link>
-
-        <Link to="/billing" className="nav-item">
-          <FaCashRegister /> Billing
-        </Link>
+        {menu.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`flex items-center gap-3 p-3 rounded-lg transition 
+            ${
+              location.pathname === item.path
+                ? "bg-white text-blue-600 font-semibold"
+                : "hover:bg-blue-500"
+            }`}
+          >
+            {item.icon}
+            {item.name}
+          </Link>
+        ))}
       </div>
 
       {/* MAIN */}
-      <div className="main">
+      <div className="flex-1 bg-gray-100 min-h-screen">
 
-        <div className="topbar">
-          <input className="search" placeholder="Search..." />
-          <div>🔔 Admin</div>
+        <div className="p-4 flex justify-between items-center bg-white shadow">
+          <input
+            placeholder="Search..."
+            className="p-2 border rounded-lg w-1/3"
+          />
+
+          <div className="flex items-center gap-3">
+            🔔 Admin
+          </div>
         </div>
 
-        <div className="content">
-          {children}
-        </div>
-
+        <div className="p-6">{children}</div>
       </div>
-
     </div>
   );
 };
