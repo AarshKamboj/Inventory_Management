@@ -25,7 +25,7 @@ const Login = () => {
       localStorage.setItem("user", JSON.stringify(res.data));
 
       // ✅ Redirect
-      navigate("/dashboard");
+      window.location.href = "/dashboard";
     } catch (err) {
       setError("Invalid credentials");
     }

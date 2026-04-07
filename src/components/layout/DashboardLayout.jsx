@@ -4,17 +4,26 @@ import { FaChartBar, FaBoxOpen, FaCashRegister } from "react-icons/fa";
 const DashboardLayout = ({ children }) => {
   const location = useLocation();
 
+  const user = JSON.parse(localStorage.getItem("user"));
+
   const menu = [
     {
       name: "Dashboard",
-      path: "/dashboard", // ✅ FIXED
+      path: "/dashboard",
       icon: <FaChartBar />,
     },
-    {
-      name: "Inventory",
-      path: "/inventory",
-      icon: <FaBoxOpen />,
-    },
+
+    // ✅ ONLY ADMIN CAN SEE INVENTORY
+    ...(user?.role === "admin"
+      ? [
+          {
+            name: "Inventory",
+            path: "/inventory",
+            icon: <FaBoxOpen />,
+          },
+        ]
+      : []),
+
     {
       name: "Billing",
       path: "/billing",
@@ -29,7 +38,6 @@ const DashboardLayout = ({ children }) => {
 
   return (
     <div className="flex">
-
       {/* SIDEBAR */}
       <div className="w-64 bg-blue-600 text-white min-h-screen p-4 space-y-4">
         <h2 className="text-xl font-bold mb-6">BizSaathi 🚀</h2>
@@ -53,7 +61,6 @@ const DashboardLayout = ({ children }) => {
 
       {/* MAIN */}
       <div className="flex-1 bg-gray-100 min-h-screen">
-
         <div className="p-4 flex justify-between items-center bg-white shadow">
           <input
             placeholder="Search..."
@@ -61,7 +68,17 @@ const DashboardLayout = ({ children }) => {
           />
 
           <div className="flex items-center gap-3">
-            🔔 Admin
+            <span>🔔 {user?.role?.toUpperCase()}</span>
+
+            <button
+              onClick={() => {
+                localStorage.removeItem("user");
+                window.location.href = "/";
+              }}
+              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg"
+            >
+              Logout
+            </button>
           </div>
         </div>
 
